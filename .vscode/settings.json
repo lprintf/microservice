@@ -1,0 +1,96 @@
+{
+    // 终端配置
+    "terminal.integrated.profiles.windows": {
+        "Git Bash": {
+            "path": "C:\\Program Files\\Git\\bin\\bash.exe",
+            "args": [],
+            "icon": "terminal-bash"
+        },
+        "Command Prompt": {
+            "path": [
+                "C:\\Windows\\System32\\cmd.exe"
+            ],
+            "args": [],
+            "icon": "terminal-cmd"
+        },
+        "PowerShell": {
+            "path": [
+                "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+            ],
+            "args": [],
+            "icon": "terminal-powershell"
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "terminal.integrated.profiles.osx": {
+        "zsh": {
+            "path": "/bin/zsh",
+            "args": [],
+            "icon": "terminal-bash"
+        },
+        "bash": {
+            "path": "/bin/bash",
+            "args": [],
+            "icon": "terminal-bash"
+        }
+    },
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "/bin/bash",
+            "args": [],
+            "icon": "terminal-bash"
+        },
+        "zsh": {
+            "path": "/usr/bin/zsh",
+            "args": [],
+            "icon": "terminal-bash"
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "python.terminal.activateEnvironment": true,
+    // Python配置
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.python",
+        // "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        },
+    },
+    "isort.args": [
+        "--profile",
+        "black"
+    ],
+    "flake8.args": [
+        "--ignore=E501,W503,E226"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ],
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "python.terminal.executeInFileDir": false,
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "ENV_FILE": "${workspaceFolder}/.env"
+    },
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "ENV_FILE": "${workspaceFolder}/.env"
+    },
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "ENV_FILE": "${workspaceFolder}/.env"
+    },
+    "python.envFile": "${workspaceFolder}/.env", // 使用该配置，可在开发和生产环境中绕过dotenv库的使用
+    "python.testing.pytestArgs": [
+        "test"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    // Markdown配置
+    "[markdown]": {
+        "editor.defaultFormatter": "vscode.markdown-language-features",
+        "editor.formatOnSave": true
+    },
+}

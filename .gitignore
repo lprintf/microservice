@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+.venv
+*.env.local
+
+# Docker
+.dockerignore
+*.dockerfile
+docker-compose.override.yml
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Secrets
+secrets/
+*.pem
+*.key
+
+# Environment variables
+.env
+!.env.example
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+*.zip
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.jupyter/
+.ipynb_checkpoints/    

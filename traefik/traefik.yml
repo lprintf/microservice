@@ -1,0 +1,25 @@
+global:
+  sendAnonymousUsage: false
+
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+  file:
+    directory: "/etc/traefik/dynamic-config"
+    watch: true
+  consulCatalog:
+    endpoint: 
+    # addresses:
+    #   - "consul:8500"
+      address: "consul:8500"
+      scheme: "http"
+    exposedByDefault: false
+
+api:
+  dashboard: true
+  insecure: true  # 仅用于开发环境，生产环境需配置HTTPS

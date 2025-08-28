@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # 服务发现组件
+  consul:
+    image: consul:1.15
+    container_name: consul
+    restart: always
+    ports:
+      - "8500:8500"  # Web UI
+      - "8600:8600/udp"  # DNS服务
+    volumes:
+      - consul-data:/consul/data
+    command: agent -server -bootstrap-expect=1 -ui -client=0.0.0.0
+    networks:
+      - microservice-network
+
+  # API网关 (Traefik)
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"        # HTTP入口
+      - "8080:8080"    # Traefik Dashboard
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik/dynamic-config:/etc/traefik/dynamic-config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - consul
+    networks:
+      - microservice-network
+
+  # 认证服务
+  auth-service:
+    build:
+      context: ./services/auth
+    container_name: auth-service
+    restart: always
+    environment:
+      - SERVICE_NAME=auth-service
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - JWT_SECRET_KEY=your-secret-key-here
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+    depends_on:
+      - consul
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.auth-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.auth-service.rule=PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth-service.entrypoints=web"
+    networks:
+      - microservice-network
+
+  # 示例业务服务1
+  user-service:
+    build:
+      context: ./services/user
+    container_name: user-service
+    restart: always
+    environment:
+      - SERVICE_NAME=user-service
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - AUTH_SERVICE_URL=http://auth-service:8000
+      - JWT_SECRET_KEY=your-secret-key-here
+    depends_on:
+      - consul
+      - auth-service
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.user-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.user-service.rule=PathPrefix(`/users`)"
+      - "traefik.http.routers.user-service.entrypoints=web"
+      - "traefik.http.routers.user-service.middlewares=auth-middleware@file"
+    networks:
+      - microservice-network
+
+  # 示例业务服务2
+  product-service:
+    build:
+      context: ./services/product
+    container_name: product-service
+    restart: always
+    environment:
+      - SERVICE_NAME=product-service
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - AUTH_SERVICE_URL=http://auth-service:8000
+      - JWT_SECRET_KEY=your-secret-key-here
+    depends_on:
+      - consul
+      - auth-service
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.product-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.product-service.rule=PathPrefix(`/products`)"
+      - "traefik.http.routers.product-service.entrypoints=web"
+      - "traefik.http.routers.product-service.middlewares=auth-middleware@file"
+    networks:
+      - microservice-network
+
+networks:
+  microservice-network:
+    driver: bridge
+
+volumes:
+  consul-data:
