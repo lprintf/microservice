@@ -1,6 +1,6 @@
 # FastAPI Microservice Framework
 
-[中文版](./README.md)
+[中文版](./readme.md)
 
 ## Overview
 
