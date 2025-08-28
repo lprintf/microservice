@@ -31,6 +31,7 @@
 
 ### 启动服务
 ```bash
+```bash
 # 克隆仓库
 git clone <仓库地址>
 cd fastapi-microservice-framework
@@ -41,6 +42,7 @@ docker-compose up -d
 # 查看服务状态
 docker-compose ps
 ```
+```
 ### 访问服务
 
 - Traefik管理面板：http://localhost:8080
@@ -48,6 +50,7 @@ docker-compose ps
 - API网关入口：http://localhost
 
 ### 示例使用
+```bash
 ```bash
 # 获取访问令牌
 curl -X POST "http://localhost/auth/token" \
@@ -61,6 +64,7 @@ curl "http://localhost/users" \
 # 使用令牌访问产品服务
 curl "http://localhost/products" \
   -H "Authorization: Bearer <your_token>"
+```
 ```
 ## 目录结构
 ```
