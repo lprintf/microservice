@@ -94,3 +94,17 @@ To add a new microservice, simply follow these steps:
 3. Add persistent data storage
 4. Configure appropriate resource limits
 5. Add monitoring and log collection
+
+## Version History
+
+### base-v1.0.0 (Basic Starter Version)
+Release Date: Please refer to [base-v1.0.0 tag](https://github.com/lprintf/microservice/releases/tag/base-v1.0.0) for details
+
+> Note: This version corresponds to the `base-stable` branch. For long-term maintenance, please develop based on this branch.
+
+This is the first basic starter version with the following key features:
+1. Complete microservice architecture based on FastAPI, Traefik and Consul
+2. Implemented auth service, user service and product service
+3. Integrated frontend service providing visual operation interface
+4. Support service discovery, load balancing and API gateway routing
+5. Provided Docker Compose configuration for easy deployment

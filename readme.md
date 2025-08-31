@@ -98,3 +98,17 @@ curl "http://localhost/products" \
 3. 添加数据持久化存储
 4. 配置适当的资源限制
 5. 添加监控和日志收集
+
+## 版本说明
+
+### base-v1.0.0 (基础入门版本)
+- 发布日期: 请查看 [base-v1.0.0 tag](https://github.com/lprintf/microservice/releases/tag/base-v1.0.0) 获取详细信息
+
+> 提示: 该版本对应分支为 `base-stable`，如需长期维护版本，请基于此分支进行开发。
+
+这是第一个基础入门版本，包含以下主要特性：
+1. 完整的微服务架构搭建，基于FastAPI、Traefik和Consul
+2. 实现了认证服务、用户服务和产品服务
+3. 集成了前端服务，提供可视化操作界面
+4. 支持服务发现、负载均衡和API网关路由
+5. 提供了Docker Compose配置，便于快速部署
