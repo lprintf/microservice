@@ -21,6 +21,7 @@
 3. **认证服务**：处理用户认证和JWT令牌发放
 4. **用户服务**：用户管理相关API
 5. **产品服务**：产品管理相关API（示例服务）
+6. **前端服务**：基于Vue.js开发的用户界面，提供可视化操作
 
 ## 快速开始
 
@@ -48,6 +49,7 @@ docker-compose ps
 - Traefik管理面板：http://localhost:8080
 - Consul管理界面：http://localhost:8500
 - API网关入口：http://localhost
+- 前端服务：http://localhost (通过API网关访问)
 
 ### 示例使用
 ```bash
@@ -74,6 +76,7 @@ curl "http://localhost/products" \
 │   └── traefik.yml
 ├── services/
 │   ├── auth/                   # 认证服务
+│   ├── frontend/               # 前端服务
 │   ├── user/                   # 用户服务
 │   └── product/                # 产品服务
 ├── .env.example                # 环境变量示例

@@ -21,6 +21,7 @@ A microservice framework based on FastAPI, Traefik and Consul, featuring complet
 3. **Auth Service**: Handles user authentication and JWT token issuance
 4. **User Service**: APIs for user management
 5. **Product Service**: APIs for product management (example service)
+6. **Frontend Service**: Vue.js-based user interface providing visual operations
 
 ## Quick Start
 
@@ -46,6 +47,7 @@ docker-compose ps
 - Traefik management dashboard: http://localhost:8080
 - Consul management interface: http://localhost:8500
 - API gateway entry: http://localhost
+- Frontend service: http://localhost (accessed through API gateway)
 
 ### Example Usage
 ```bash
@@ -70,6 +72,7 @@ curl "http://localhost/products" \
 │   └── traefik.yml
 ├── services/
 │   ├── auth/                   # Authentication service
+│   ├── frontend/               # Frontend service
 │   ├── user/                   # User service
 │   └── product/                # Product service
 ├── .env.example                # Environment variables example
