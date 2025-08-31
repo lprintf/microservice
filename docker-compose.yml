@@ -102,6 +102,25 @@ services:
     networks:
       - microservice-network
 
+  # 前端服务
+  frontend-service:
+    build:
+      context: ./services/frontend
+    container_name: frontend-service
+    restart: always
+    depends_on:
+      - auth-service
+      - user-service
+      - product-service
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.frontend-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend-service.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend-service.entrypoints=web"
+      - "traefik.http.routers.frontend-service.priority=1"
+    networks:
+      - microservice-network
+
 networks:
   microservice-network:
     driver: bridge

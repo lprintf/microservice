@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, APIRouter
+from typing import Optional
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -34,6 +35,9 @@ def register_service():
 # 初始化FastAPI应用
 app = FastAPI(title="Authentication Service")
 
+# 创建带有/auth前缀的路由器
+router = APIRouter(prefix="/auth")
+
 # JWT配置
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
@@ -65,15 +69,15 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    username: str | None = None
-    role: str | None = None
+    username: Optional[str] = None
+    role: Optional[str] = None
 
 class User(BaseModel):
     username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
-    role: str | None = None
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    disabled: Optional[bool] = None
+    role: Optional[str] = None
 
 class UserInDB(User):
     hashed_password: str
@@ -104,7 +108,7 @@ def authenticate_user(fake_db, username: str, password: str):
         return False
     return user
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -140,7 +144,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 # API路由
-@app.post("/token", response_model=Token)
+@router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
     if not user:
@@ -155,7 +159,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.get("/users/me/", response_model=User)
+@router.get("/users/me/", response_model=User)
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
@@ -163,7 +167,7 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 async def health_check():
     return {"status": "healthy"}
 
-@app.get("/auth/verify")
+@router.get("/verify")
 async def verify_auth(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -174,6 +178,9 @@ async def verify_auth(token: str = Depends(oauth2_scheme)):
         return {"X-User-ID": username, "X-User-Role": role}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+# 将路由器添加到应用
+app.include_router(router)
 
 # 启动时注册服务
 register_service()

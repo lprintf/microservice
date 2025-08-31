@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from pydantic import BaseModel
 import consul
 import os
@@ -30,6 +32,13 @@ def register_service():
 # 初始化FastAPI应用
 app = FastAPI(title="Product Service")
 
+# JWT配置
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
+ALGORITHM = "HS256"
+
+# OAuth2配置
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+
 # 模拟数据库
 fake_products_db = [
     {"id": 1, "name": "Laptop", "price": 999.99, "user_id": 1},
@@ -49,19 +58,27 @@ class ProductCreate(BaseModel):
     price: float
     user_id: int
 
+class TokenData(BaseModel):
+    username: str
+    role: str
+
 # 认证依赖
-async def get_current_user(request: Request):
-    user_id = request.headers.get("X-User-ID")
-    user_role = request.headers.get("X-User-Role")
-    
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return {"username": user_id, "role": user_role}
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        role: str = payload.get("role")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username, role=role)
+    except JWTError:
+        raise credentials_exception
+    return {"username": token_data.username, "role": token_data.role}
 
 # API路由
 @app.get("/products", response_model=list[Product])

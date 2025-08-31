@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from pydantic import BaseModel
 import consul
@@ -35,7 +36,9 @@ app = FastAPI(title="User Service")
 # JWT配置
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
-AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth-service:8000")
+
+# OAuth2配置
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 # 模拟数据库
 fake_users_db = [
@@ -55,19 +58,27 @@ class UserCreate(BaseModel):
     email: str
     name: str
 
+class TokenData(BaseModel):
+    username: str
+    role: str
+
 # 认证依赖
-async def get_current_user(request: Request):
-    user_id = request.headers.get("X-User-ID")
-    user_role = request.headers.get("X-User-Role")
-    
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return {"username": user_id, "role": user_role}
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        role: str = payload.get("role")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username, role=role)
+    except JWTError:
+        raise credentials_exception
+    return {"username": token_data.username, "role": token_data.role}
 
 # 权限检查依赖
 def require_admin(current_user: dict = Depends(get_current_user)):
