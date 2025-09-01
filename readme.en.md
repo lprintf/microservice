@@ -52,16 +52,16 @@ docker-compose ps
 ### Example Usage
 ```bash
 # Get access token
-curl -X POST "http://localhost/auth/token" \
+curl -X POST "http://localhost/api/auth/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=admin&password=secret"
 
 # Access user service with token
-curl "http://localhost/users" \
+curl "http://localhost/api/users" \
   -H "Authorization: Bearer <your_token>"
 
 # Access product service with token
-curl "http://localhost/products" \
+curl "http://localhost/api/products" \
   -H "Authorization: Bearer <your_token>"
 ```
 ## Directory Structure

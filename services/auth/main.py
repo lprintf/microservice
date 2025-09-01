@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, APIRouter
+from fastapi import FastAPI, Depends, HTTPException, status, APIRouter, Response
 from typing import Optional
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -36,7 +36,7 @@ def register_service():
 app = FastAPI(title="Authentication Service")
 
 # 创建带有/auth前缀的路由器
-router = APIRouter(prefix="/auth")
+router = APIRouter()
 
 # JWT配置
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
@@ -163,24 +163,29 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
 
 @router.get("/verify")
-async def verify_auth(token: str = Depends(oauth2_scheme)):
+async def verify_auth(token: str = Depends(oauth2_scheme), response: Response = None):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         role: str = payload.get("role")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid credentials")
+        # 设置响应头
+        response.headers["X-User-ID"] = username
+        response.headers["X-User-Role"] = role
+        # 同时返回响应体便于调试
         return {"X-User-ID": username, "X-User-Role": role}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
 # 将路由器添加到应用
-app.include_router(router)
+app.include_router(router, prefix="/api/auth")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
 # 启动时注册服务
 register_service()

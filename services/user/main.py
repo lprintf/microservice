@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Depends, HTTPException, status, Request, APIRouter
 from pydantic import BaseModel
 import consul
 import os
@@ -31,6 +31,9 @@ def register_service():
 # 初始化FastAPI应用
 app = FastAPI(title="User Service")
 
+# 创建带前缀的路由器
+router = APIRouter()
+
 # 模拟数据库
 fake_users_db = [
     {"id": 1, "username": "johndoe", "email": "johndoe@example.com", "name": "John Doe"},
@@ -50,7 +53,7 @@ class UserCreate(BaseModel):
     name: str
 
 # 认证依赖 - 直接从请求头获取用户信息
-async def get_current_user(request):
+async def get_current_user(request:Request):
     user_id = request.headers.get("X-User-ID")
     user_role = request.headers.get("X-User-Role")
 
@@ -80,19 +83,19 @@ def discover_service(service_name):
     return services[0]['Service']
 
 # API路由
-@app.get("/users", response_model=list[User])
-async def get_users(request, current_user: dict = Depends(get_current_user)):
+@router.get("/users", response_model=list[User])
+async def get_users(request: Request, current_user: dict = Depends(get_current_user)):
     return fake_users_db
 
-@app.get("/users/{user_id}", response_model=User)
-async def get_user(user_id: int, request, current_user: dict = Depends(get_current_user)):
+@router.get("/users/{user_id}", response_model=User)
+async def get_user(user_id: int, request: Request, current_user: dict = Depends(get_current_user)):
     user = next((u for u in fake_users_db if u["id"] == user_id), None)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@app.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
-async def create_user(user: UserCreate, request, current_user: dict = Depends(require_admin)):
+@router.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
+async def create_user(user: UserCreate, request: Request, current_user: dict = Depends(require_admin)):
     new_user = {
         "id": len(fake_users_db) + 1,
         "username": user.username,
@@ -102,13 +105,9 @@ async def create_user(user: UserCreate, request, current_user: dict = Depends(re
     fake_users_db.append(new_user)
     return new_user
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
-
 # 服务间调用示例
-@app.get("/users/{user_id}/products")
-async def get_user_products(user_id: int, request, current_user: dict = Depends(get_current_user)):
+@router.get("/users/{user_id}/products")
+async def get_user_products(user_id: int, request: Request, current_user: dict = Depends(get_current_user)):
     # 发现产品服务
     try:
         product_service = discover_service("product-service")
@@ -121,6 +120,13 @@ async def get_user_products(user_id: int, request, current_user: dict = Depends(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calling product service: {str(e)}")
 
+# 包含路由器
+app.include_router(router,prefix="/api")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+    
 # 启动时注册服务
 register_service()
 

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: '/', // Traefik会将请求转发到对应的服务
+  baseURL: '/api', // Traefik会将请求转发到对应的服务
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

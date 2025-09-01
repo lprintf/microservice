@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Depends, HTTPException, status, Request, APIRouter
 from pydantic import BaseModel
 import consul
 import os
@@ -30,6 +30,9 @@ def register_service():
 # 初始化FastAPI应用
 app = FastAPI(title="Product Service")
 
+# 创建带前缀的路由器
+router = APIRouter()
+
 # 模拟数据库
 fake_products_db = [
     {"id": 1, "name": "Laptop", "price": 999.99, "user_id": 1},
@@ -50,7 +53,7 @@ class ProductCreate(BaseModel):
     user_id: int
 
 # 认证依赖 - 直接从请求头获取用户信息
-async def get_current_user(request):
+async def get_current_user(request:Request):
     user_id = request.headers.get("X-User-ID")
     user_role = request.headers.get("X-User-Role")
 
@@ -60,25 +63,26 @@ async def get_current_user(request):
             detail="User not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    print(user_id, user_role)
 
     return {"username": user_id, "role": user_role}
 
 # API路由
-@app.get("/products", response_model=list[Product])
-async def get_products(request, user_id: int = None, current_user: dict = Depends(get_current_user)):
+@router.get("/products", response_model=list[Product])
+async def get_products(request:Request, user_id: int = None, current_user: dict = Depends(get_current_user)):
     if user_id:
         return [p for p in fake_products_db if p["user_id"] == user_id]
     return fake_products_db
 
-@app.get("/products/{product_id}", response_model=Product)
-async def get_product(product_id: int, request, current_user: dict = Depends(get_current_user)):
+@router.get("/products/{product_id}", response_model=Product)
+async def get_product(product_id: int, request:Request, current_user: dict = Depends(get_current_user)):
     product = next((p for p in fake_products_db if p["id"] == product_id), None)
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
-@app.post("/products", response_model=Product, status_code=status.HTTP_201_CREATED)
-async def create_product(product: ProductCreate, request, current_user: dict = Depends(get_current_user)):
+@router.post("/products", response_model=Product, status_code=status.HTTP_201_CREATED)
+async def create_product(product: ProductCreate, request:Request, current_user: dict = Depends(get_current_user)):
     new_product = {
         "id": len(fake_products_db) + 1,
         "name": product.name,
@@ -87,6 +91,9 @@ async def create_product(product: ProductCreate, request, current_user: dict = D
     }
     fake_products_db.append(new_product)
     return new_product
+
+# 包含路由器
+app.include_router(router, prefix="/api")
 
 @app.get("/health")
 async def health_check():

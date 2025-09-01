@@ -55,16 +55,16 @@ docker-compose ps
 ```bash
 ```bash
 # 获取访问令牌
-curl -X POST "http://localhost/auth/token" \
+curl -X POST "http://localhost/api/auth/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=admin&password=secret"
 
 # 使用令牌访问用户服务
-curl "http://localhost/users" \
+curl "http://localhost/api/users" \
   -H "Authorization: Bearer <your_token>"
 
 # 使用令牌访问产品服务
-curl "http://localhost/products" \
+curl "http://localhost/api/products" \
   -H "Authorization: Bearer <your_token>"
 ```
 ```
