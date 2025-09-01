@@ -1,6 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 import consul
 import os
@@ -33,13 +31,6 @@ def register_service():
 # 初始化FastAPI应用
 app = FastAPI(title="User Service")
 
-# JWT配置
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
-ALGORITHM = "HS256"
-
-# OAuth2配置
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-
 # 模拟数据库
 fake_users_db = [
     {"id": 1, "username": "johndoe", "email": "johndoe@example.com", "name": "John Doe"},
@@ -58,27 +49,19 @@ class UserCreate(BaseModel):
     email: str
     name: str
 
-class TokenData(BaseModel):
-    username: str
-    role: str
+# 认证依赖 - 直接从请求头获取用户信息
+async def get_current_user(request):
+    user_id = request.headers.get("X-User-ID")
+    user_role = request.headers.get("X-User-Role")
 
-# 认证依赖
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        role: str = payload.get("role")
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username, role=role)
-    except JWTError:
-        raise credentials_exception
-    return {"username": token_data.username, "role": token_data.role}
+    if not user_id or not user_role:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return {"username": user_id, "role": user_role}
 
 # 权限检查依赖
 def require_admin(current_user: dict = Depends(get_current_user)):
@@ -98,18 +81,18 @@ def discover_service(service_name):
 
 # API路由
 @app.get("/users", response_model=list[User])
-async def get_users(current_user: dict = Depends(get_current_user)):
+async def get_users(request, current_user: dict = Depends(get_current_user)):
     return fake_users_db
 
 @app.get("/users/{user_id}", response_model=User)
-async def get_user(user_id: int, current_user: dict = Depends(get_current_user)):
+async def get_user(user_id: int, request, current_user: dict = Depends(get_current_user)):
     user = next((u for u in fake_users_db if u["id"] == user_id), None)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 @app.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
-async def create_user(user: UserCreate, current_user: dict = Depends(require_admin)):
+async def create_user(user: UserCreate, request, current_user: dict = Depends(require_admin)):
     new_user = {
         "id": len(fake_users_db) + 1,
         "username": user.username,
@@ -125,7 +108,7 @@ async def health_check():
 
 # 服务间调用示例
 @app.get("/users/{user_id}/products")
-async def get_user_products(user_id: int, current_user: dict = Depends(get_current_user)):
+async def get_user_products(user_id: int, request, current_user: dict = Depends(get_current_user)):
     # 发现产品服务
     try:
         product_service = discover_service("product-service")
